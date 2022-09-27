@@ -1,5 +1,8 @@
 #lang racket
 
+(require "examplerLexer.rkt")
+(require parser-tools/lex)
+
 (define (mult_op? x)
     (cond
         [(= x "*") #t]
@@ -87,13 +90,12 @@
     )
 )
 
-(define (parse str)
-    str
-    (define lines (open-input-file str))
-    lines
-    (define prog? (program? read-line(lines)))
+(define (parse tokens)
+    (define prog? (program? tokens))
     prog?
 )
 
-(define isProgram?(parse "test.txt"))
+(define tokens(map position-token-token (string->tokens "test.txt")))
+
+(define isProgram?(parse tokens))
 isProgram?

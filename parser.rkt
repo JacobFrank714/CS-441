@@ -1,6 +1,6 @@
 #lang racket
 
-(require "examplerLexer.rkt")
+(require "lexer.rkt")
 (require parser-tools/lex)
 
 (define (mult_op? x)

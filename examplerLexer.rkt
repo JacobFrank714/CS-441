@@ -18,16 +18,18 @@
   [mult-op    (or "*" "/")]
   [add-op     (or "+" "-")]
   [end-of-file "$$"]
+  [paren-start "("]
+  [paren-end  ")"]
   )
 
 ;;; TOKENS
 
 ;; Tokens such as numbers (and identifiers and strings) carry a value
 ;; In the example only the NUMBER token is used, but you may need more.
-(define-tokens value-tokens (NUMBER END-OF-PROGRAM READ WRITE IDENTIFIER MULT-OP ADD-OP))
+(define-tokens value-tokens (NUMBER END-OF-PROGRAM READ WRITE IDENTIFIER MULT-OP ADD-OP PAREN-START PAREN-END))
 
 ;; Tokens that don't carry a value.
-(define-empty-tokens op-tokens (newline :=  = < > + - * / ^  EOF))
+(define-empty-tokens op-tokens (newline :=  = < > + - * / ^ \( \) EOF))
 
 ;;; LEXER
 
@@ -40,24 +42,24 @@
 
 (define lex
   (lexer-src-pos
-    [(eof)                                            ; input: eof of file     
+    [(eof)                                           ; input: eof of file     
     'EOF]                                            ; output: the symbol EOF
 
     [(:+ end-of-file)
     (token-END-OF-PROGRAM (string->symbol lexeme))]
 
-    [(:or #\tab #\space #\newline "\r")               ; input: whitespace
+    [(:or #\tab #\space #\newline "\r")              ; input: whitespace
     (return-without-pos (lex input-port))]           ; output: the next token
    ;                                                           (i.e. skip the whitespace)
 
-    [#\newline                                        ; input: newline
-    (token-newline)]                                 ; ouput: a newline-token   
-   ;                                                 ; note:  (token-newline) returns 'newline
+    [#\newline                                      ; input: newline
+    (token-newline)]                                ; ouput: a newline-token   
+   ;                                                ; note:  (token-newline) returns 'newline
 
-    [(:or ":=" "*" "/" "^" "<" ">" "=")       ; input:  an operator
-    (string->symbol lexeme)]                         ; output: corresponding symbol
+    [(:or ":=" "^" "<" ">" "=")                     ; input:  an operator
+    (string->symbol lexeme)]                        ; output: corresponding symbol
 
-    [(:or "+" "-")                                   ; input: "+" or "-"
+    [(:or "+" "-")                                  ; input: "+" or "-"
     (token-ADD-OP (string->symbol lexeme))]         ; ouput: an ADD-OP token
 
     [(:or "*" "/")                                  ; input: "*" or "/"
@@ -75,19 +77,13 @@
     [(:+ letter)                                    ; input: Alphabetic letter
     (token-IDENTIFIER lexeme)]                      ; output: IDENTIFIER token whose value is the word
 
+    [(:+ paren-start)                               ; input: (
+    (token-PAREN-START lexeme)]                     ; output: PAREN-START token 
+
+    [(:+ paren-end)                                 ; input: )
+    (token-PAREN-END lexeme)]                       ; output: PAREN-END token 
   ))
 
-;;; TEST
-
-(define input (open-input-file "test.txt"))
-
-(lex input) ; (position-token (token 'NUMBER 123) (position 1 #f #f) (position 4 #f #f))
-(lex input) ; (position-token '+ (position 4 #f #f) (position 5 #f #f))
-(lex input) ; (position-token (token 'NUMBER 456) (position 5 #f #f) (position 8 #f #f))
-(lex input) ; (position-token 'EOF (position 8 #f #f) (position 8 #f #f))
-
-
-;; Let's make it a little easier to play with the lexer.
 
 (define (string->tokens s)
   (port->tokens (open-input-file s)))
@@ -99,4 +95,3 @@
       (cons token (port->tokens in))))
 
 (provide string->tokens)
-(map position-token-token (string->tokens "test.txt"))   ; strip positions

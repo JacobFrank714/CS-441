@@ -95,7 +95,7 @@
     prog?
 )
 
-(define tokens(map position-token-token (string->tokens "test.txt")))
-
-(define isProgram?(parse tokens))
-isProgram?
+(define tokens(map position-token (string->tokens "input01.txt")))
+tokens
+;;; (define isProgram?(parse tokens))
+;;; isProgram?

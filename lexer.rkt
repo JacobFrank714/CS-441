@@ -29,11 +29,10 @@
 (define-tokens value-tokens (NUMBER END-OF-PROGRAM READ WRITE IDENTIFIER MULT-OP ADD-OP PAREN-START PAREN-END))
 
 ;; Tokens that don't carry a value.
-(define-empty-tokens op-tokens (newline :=  = < > + - * / ^ \( \) EOF))
+(define-empty-tokens op-tokens (newline :=  = < > ^ \( \) EOF))
 
 ;;; LEXER
 
-;; Here the lexer (aka the scanner) is defined.
 ;; The construct lexer-src-pos evaluates to a function which scans an input port
 ;; returning one position-token at a time.
 
@@ -42,17 +41,17 @@
 
 (define lex
   (lexer-src-pos
-    [(eof)                                           ; input: eof of file     
-    'EOF]                                            ; output: the symbol EOF
+    [(eof)                                          ; input: eof of file     
+    'EOF]                                           ; output: the symbol EOF
 
     [(:+ end-of-file)
     (token-END-OF-PROGRAM (string->symbol lexeme))]
 
-    [(:or #\tab #\space #\newline "\r")              ; input: whitespace
-    (return-without-pos (lex input-port))]           ; output: the next token
-   ;                                                           (i.e. skip the whitespace)
+    [(:or #\tab #\space #\newline)                  ; input: whitespace
+    (return-without-pos (lex input-port))]          ; output: the next token
+   ;                                                  (i.e. skip the whitespace)
 
-    [#\newline                                      ; input: newline
+    ["\r"                                           ; input: newline
     (token-newline)]                                ; ouput: a newline-token   
    ;                                                ; note:  (token-newline) returns 'newline
 

@@ -3,22 +3,46 @@
 (require "lexer.rkt")
 (require parser-tools/lex)
 
+(define (setter? x)
+    (print "checking setter? ")
+    (println (first x))
+    (if (eq? (first x) ':=)
+        (expr? (rest x))
+        #f
+    )
+)
+
 (define (id? x)
-    (if (eq? (first x) 'IDENTIFIER)
+    (if (eq? (token-name (first x)) 'IDENTIFIER)
+        #t
+        #f
+    )
+)
+
+(define (num? x)
+    (if (eq? (token-name (first x)) 'NUMBER)
+        #t
+        #f
+    )
+)
+
+(define (paren-end? x)
+    (if (eq? (token-name (first x)) 'PAREN-END)
         #t
         #f
     )
 )
 
 (define (paren-start? x)
-    (if (eq? (first x) 'PAREN-START)
+    (if (eq? (token-name (first x)) 'PAREN-START)
         (expr? (rest x))
         #f
     )
 )
 
 (define (mult_op? x)
-    (println "checking mult_op?")
+    (print "checking mult_op? ")
+    (println (first x))
     (cond
         [(eq? (token-name (first x)) 'MULT-OP) (factor_tail? (rest x))]
         [else #f]
@@ -26,69 +50,74 @@
 )
 
 (define (add_op? x)
-    (println "checking add_op?")
+    (print "checking add_op? ")
+    (println (first x))
     (cond   
-        [(eq? (token-name (first x)) 'ADD-OP) #t]
+        [(eq? (token-name (first x)) 'ADD-OP) (term_tail? (rest x))]
         [else #f]
     )
 )
 
 (define (factor_tail? x)
-    (println "checking factor_tail?")
+    (print "checking factor_tail? ")
+    (println (first x))
     (cond
+        [(paren-end? x) (rest x)]
         [(factor? x) (mult_op? (rest x))]
-        [(eq? (token-name (first x)) 'newline) #t]
+        ;;; [(factor? x) (add_op? (rest x))]
+        ;;; [(add_op? x) (term_tail? (rest x))]
+        [(eq? (token-name (first x)) 'newline) (rest x)]
         [else #f]
     )
 )
 
-
 (define (factor? x)
-    (println "checking factor?")
-    (println (token-name(first x)))
+    (print "checking factor? ")
+    (println (first x))
     (cond
-        [(eq? (token-name (first x)) 'PAREN-START) (expr? (rest x))]
-        [(eq? (token-name (first x)) 'IDENTIFIER) #t]
-        [(eq? (token-name (first x)) 'NUMBER) #t]
+        ;;; [(eq? (token-name (first x)) 'PAREN-START) (expr? (rest x))]
+        [(id? x) (rest x)]
+        [(num? x) (rest x)]
         [else #f]
     )
 )
 
 (define (term_tail? x)
-    (println "checking term_tail?")
+    (print "checking term_tail? ")
+    (println (first x))
     (cond
-        [(add_op? (first x)) #t]
-        [(term? (first x)) #t]
-        [(term_tail? (first x)) #t]
-        [(eq? (token-name (first x)) 'newline) #t]
+        [(term? x) (term_tail? (rest x))]
+        [(eq? (token-name (first x)) 'PAREN-END) (rest x)]
+        [(eq? (token-name (first x)) 'newline) (rest x)]
         [else #f]
     )
 )
 
 (define (term? x)
-    (println "checking term?")
+    (print "checking term? ")
+    (println (first x))
     (cond 
-        [(factor? x) (factor_tail? (rest x))]
+        [(factor? x) (if (eq? (token-name (second x)) 'ADD-OP) 
+                        (add_op? (rest x)) 
+                        (factor_tail? (rest x)))]
+        [(add_op? x) (term_tail? (rest x))]
         [else #f]
     )
 )
 
 (define (expr? x)
-    (println "checking expr?")
+    (print "checking expr? ")
+    (println (first x))
     (cond
+        [(paren-start? x) (expr? (rest x))]
         [(term? x) (term_tail? (rest x))]
         [else #f]))
 
-(define (setter? x)
-    (println "checking setter?")
-    (if (eq? (first x) ':=)
-        (expr? (rest x))
-        #f
-    )
-)
+
 
 (define (stmt? x)
-    (println "checking stmt? on")
+    (print "checking stmt? ")
+    (println (first x))
     (cond 
         [(eq? (token-name (first x)) 'IDENTIFIER) (setter? (rest x))]
         [(eq? (token-name (first x)) 'READ) (id? (rest x))]
@@ -98,17 +127,18 @@
 )
 
 (define (stmt_list? x)
-    (println "checking stmt_list?")
+    (print "checking stmt_list? ")
+    (println (first x))
     (cond
         [(stmt? x) (stmt_list? (rest x))]
-        [(eq? (token-name (first x)) 'newline) #t]
+        [(eq? (token-name (first x)) 'newline) (rest x)]
         [else #f]
     )
 )
 
 (define (program? x) 
-    (println "checking program?")
-    ;;; (println x)
+    (print "checking program? ")
+    (println (first x))
     (if (stmt_list? x)
         (if(eq? (token-name last x) 'END-OF-PROGRAM) 
             #t 

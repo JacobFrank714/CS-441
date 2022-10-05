@@ -13,27 +13,35 @@
 )
 
 (define (id? x)
+    (print "checking id? ")
+    (println (first x))
     (if (eq? (token-name (first x)) 'IDENTIFIER)
-        #t
+        (rest x)
         #f
     )
 )
 
 (define (num? x)
+    (print "checking num? ")
+    (println (first x))
     (if (eq? (token-name (first x)) 'NUMBER)
-        #t
+        (rest x)
         #f
     )
 )
 
 (define (paren-end? x)
+    (print "checking paren-end? ")
+    (println (first x))
     (if (eq? (token-name (first x)) 'PAREN-END)
-        #t
+        (rest x)
         #f
     )
 )
 
 (define (paren-start? x)
+    (print "checking paren-start? ")
+    (println (first x))
     (if (eq? (token-name (first x)) 'PAREN-START)
         (expr? (rest x))
         #f
@@ -44,7 +52,7 @@
     (print "checking mult_op? ")
     (println (first x))
     (cond
-        [(eq? (token-name (first x)) 'MULT-OP) (factor_tail? (rest x))]
+        [(eq? (token-name (first x)) 'MULT-OP) (factor? (rest x))]
         [else #f]
     )
 )
@@ -53,7 +61,7 @@
     (print "checking add_op? ")
     (println (first x))
     (cond   
-        [(eq? (token-name (first x)) 'ADD-OP) (term_tail? (rest x))]
+        [(eq? (token-name (first x)) 'ADD-OP) (term? (rest x))]
         [else #f]
     )
 )
@@ -63,11 +71,9 @@
     (println (first x))
     (cond
         [(paren-end? x) (rest x)]
-        [(factor? x) (mult_op? (rest x))]
-        ;;; [(factor? x) (add_op? (rest x))]
-        ;;; [(add_op? x) (term_tail? (rest x))]
+        [(mult_op? x) (factor? (rest x))]
         [(eq? (token-name (first x)) 'newline) (rest x)]
-        [else #f]
+        [else (rest x)]
     )
 )
 
@@ -86,10 +92,10 @@
     (print "checking term_tail? ")
     (println (first x))
     (cond
-        [(term? x) (term_tail? (rest x))]
-        [(eq? (token-name (first x)) 'PAREN-END) (rest x)]
+        [(add_op? x) (term? (rest x))]
+        [(paren-end? x) (rest x)]
         [(eq? (token-name (first x)) 'newline) (rest x)]
-        [else #f]
+        [else (rest x)]
     )
 )
 
@@ -97,10 +103,10 @@
     (print "checking term? ")
     (println (first x))
     (cond 
+        [(paren-start? x) (expr? (rest x))]
         [(factor? x) (if (eq? (token-name (second x)) 'ADD-OP) 
                         (add_op? (rest x)) 
                         (factor_tail? (rest x)))]
-        [(add_op? x) (term_tail? (rest x))]
         [else #f]
     )
 )
@@ -109,7 +115,6 @@
     (print "checking expr? ")
     (println (first x))
     (cond
-        [(paren-start? x) (expr? (rest x))]
         [(term? x) (term_tail? (rest x))]
         [else #f]))
 

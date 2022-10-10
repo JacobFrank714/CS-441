@@ -153,14 +153,9 @@
     )
 )
 
-(define (parse tokens)
+(define (parse file)
+    (define tokens(map position-token-token (string->tokens file))) 
+    ;;; tokens
     (define prog? (program? tokens))
     prog?
 )
-
-(define tokens(map position-token-token (string->tokens "input01.txt")))
-;;; tokens
-(define isProgram?(parse tokens))
-isProgram?
-
-;;; gramar on page 107 of book
